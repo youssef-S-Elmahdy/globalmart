@@ -1,0 +1,38 @@
+# Spark checkpoints and temporary files
+data/checkpoints/
+*.crc
+*.tmp
+
+# Spark logs and metadata
+logs/
+*.log
+metastore_db/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data files (optional - uncomment if you don't want to track data)
+# data/raw/
+# data/processed/
+# data/warehouse/
+
+# Docker volumes data
+docker-compose.override.yml

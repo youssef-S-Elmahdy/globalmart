@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    platform: linux/arm64
+    container_name: globalmart-postgres
+    environment:
+      POSTGRES_DB: globalmart
+      POSTGRES_USER: globalmart
+      POSTGRES_PASSWORD: globalmart123
+      POSTGRES_INITDB_ARGS: "-E UTF8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ../config/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - globalmart-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U globalmart"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:
+
+networks:
+  globalmart-network:
+    external: true
