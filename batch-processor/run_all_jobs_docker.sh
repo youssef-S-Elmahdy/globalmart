@@ -22,7 +22,7 @@ run_job() {
 
     /opt/spark/bin/spark-submit \
         --master $SPARK_MASTER \
-        --packages org.postgresql:postgresql:42.6.0,org.mongodb.spark:mongo-spark-connector_2.12:10.2.0 \
+        --packages org.postgresql:postgresql:42.6.0,org.mongodb.spark:mongo-spark-connector_2.12:10.4.0 \
         $script
 
     if [ $? -eq 0 ]; then

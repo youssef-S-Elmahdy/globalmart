@@ -2,6 +2,8 @@
 Configuration for GlobalMart Data Generator
 """
 
+import os
+
 # Business Configuration
 NUM_USERS = 10_000_000  # 10 million active users
 NUM_PRODUCTS = 250_000  # 250k products
@@ -16,7 +18,7 @@ PRODUCT_VIEW_RATE = 300  # ~60% of throughput
 CART_EVENT_RATE = 100    # ~20% of throughput
 
 # Kafka Configuration
-KAFKA_BOOTSTRAP_SERVERS = 'localhost:9093'
+KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'globalmart-kafka:9092')
 KAFKA_TOPICS = {
     'transactions': 'transactions',
     'product_views': 'product_views',

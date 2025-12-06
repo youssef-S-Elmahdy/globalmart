@@ -15,7 +15,7 @@ def create_spark_session():
         .appName("GlobalMart ETL Pipeline") \
         .config("spark.jars.packages",
                 "org.postgresql:postgresql:42.6.0,"
-                "org.mongodb.spark:mongo-spark-connector_2.12:10.2.0") \
+                "org.mongodb.spark:mongo-spark-connector_2.12:10.4.0") \
         .config("spark.mongodb.write.connection.uri", config.MONGODB_URI) \
         .getOrCreate()
 

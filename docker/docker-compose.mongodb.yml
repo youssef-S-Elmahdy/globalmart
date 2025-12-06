@@ -3,7 +3,7 @@ version: '3.8'
 services:
   mongodb:
     image: mongo:7-jammy
-    platform: linux/arm64
+    platform: linux/amd64
     container_name: globalmart-mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: globalmart
@@ -24,7 +24,7 @@ services:
 
   mongo-express:
     image: mongo-express:latest
-    platform: linux/arm64
+    platform: linux/amd64
     container_name: globalmart-mongo-express
     depends_on:
       - mongodb

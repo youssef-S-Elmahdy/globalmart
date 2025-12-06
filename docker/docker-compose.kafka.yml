@@ -3,7 +3,7 @@ version: '3.8'
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
-    platform: linux/arm64
+    platform: linux/amd64
     container_name: globalmart-zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -18,7 +18,7 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
-    platform: linux/arm64
+    platform: linux/amd64
     container_name: globalmart-kafka
     depends_on:
       - zookeeper
@@ -41,7 +41,7 @@ services:
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
-    platform: linux/arm64
+    platform: linux/amd64
     container_name: globalmart-kafka-ui
     depends_on:
       - kafka

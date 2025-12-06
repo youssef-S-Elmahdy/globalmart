@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  producer:
+    build:
+      context: ../data-generator
+      dockerfile: Dockerfile
+    container_name: globalmart-producer
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=globalmart-kafka:9092
+    volumes:
+      - ../data-generator:/app
+      - producer-logs:/logs
+    networks:
+      - globalmart-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+
+volumes:
+  producer-logs:
+
+networks:
+  globalmart-network:
+    external: true

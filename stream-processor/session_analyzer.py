@@ -16,14 +16,22 @@ KAFKA_TOPICS = {
     'cart_events': 'cart_events'
 }
 CHECKPOINT_LOCATION = "/data/checkpoints"
-POSTGRES_URL = "jdbc:postgresql://globalmart-postgres:5432/globalmart"
+
+# PostgreSQL Configuration
+POSTGRES_HOST = "globalmart-postgres"
+POSTGRES_PORT = 5432
+POSTGRES_DB = "globalmart"
+POSTGRES_USER = "globalmart"
+POSTGRES_PASSWORD = "globalmart123"
+POSTGRES_URL = f"jdbc:postgresql://{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
 POSTGRES_PROPERTIES = {
-    "user": "globalmart",
-    "password": "globalmart123",
+    "user": POSTGRES_USER,
+    "password": POSTGRES_PASSWORD,
     "driver": "org.postgresql.Driver"
 }
+
 SESSION_TIMEOUT_MINUTES = 2  # shorter window so metrics emit quickly
-CART_ABANDONMENT_THRESHOLD_MINUTES = 15
+CART_ABANDONMENT_THRESHOLD_MINUTES = 1  # 1 minute - detect carts with items but no purchase
 
 def create_spark_session():
     """Create Spark session"""
@@ -113,16 +121,52 @@ def analyze_sessions(spark):
             (col("duration_seconds") / 60).alias("time_in_cart_minutes")
         )
 
-    # Write session metrics
+    # Write session metrics with upsert to handle duplicates
     def write_sessions(batch_df, batch_id):
-        # Drop duplicate session ids in the micro-batch to avoid PK conflicts on replays
-        batch_df.dropDuplicates(["session_id"]).write \
+        if batch_df.count() == 0:
+            return
+
+        # Drop duplicate session ids in the micro-batch
+        unique_batch = batch_df.dropDuplicates(["session_id"])
+
+        # Use a temp table and upsert to avoid duplicate key errors
+        temp_table = f"temp_sessions_{batch_id}"
+
+        # Write to temp table
+        unique_batch.write \
             .jdbc(
                 url=POSTGRES_URL,
-                table="session_metrics",
-                mode="append",
+                table=temp_table,
+                mode="overwrite",
                 properties=POSTGRES_PROPERTIES
             )
+
+        # Upsert from temp table to main table
+        import psycopg2
+        conn = psycopg2.connect(
+            host=POSTGRES_HOST,
+            port=POSTGRES_PORT,
+            database=POSTGRES_DB,
+            user=POSTGRES_USER,
+            password=POSTGRES_PASSWORD
+        )
+        cur = conn.cursor()
+
+        cur.execute(f"""
+            INSERT INTO session_metrics
+            SELECT * FROM {temp_table}
+            ON CONFLICT (session_id) DO UPDATE SET
+                end_time = EXCLUDED.end_time,
+                duration_seconds = EXCLUDED.duration_seconds,
+                page_views = EXCLUDED.page_views,
+                cart_adds = EXCLUDED.cart_adds,
+                cart_removes = EXCLUDED.cart_removes
+        """)
+
+        cur.execute(f"DROP TABLE {temp_table}")
+        conn.commit()
+        cur.close()
+        conn.close()
 
     session_query = session_metrics \
         .writeStream \

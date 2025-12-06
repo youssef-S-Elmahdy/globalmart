@@ -108,3 +108,26 @@ CREATE TABLE dashboard_metrics (
 
 CREATE INDEX idx_dashboard_name ON dashboard_metrics(metric_name);
 CREATE INDEX idx_dashboard_time ON dashboard_metrics(timestamp);
+
+-- Kafka ingestion metrics (Part 1)
+CREATE TABLE kafka_metrics (
+    id SERIAL PRIMARY KEY,
+    topic VARCHAR(50),
+    event_count BIGINT,
+    rate DECIMAL(10, 2),
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_kafka_metrics_topic ON kafka_metrics(topic, timestamp);
+
+-- System health metrics (Part 5)
+CREATE TABLE system_health_metrics (
+    id SERIAL PRIMARY KEY,
+    metric_name VARCHAR(100),
+    metric_value DECIMAL(15, 2),
+    metric_type VARCHAR(50),
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    metadata TEXT
+);
+
+CREATE INDEX idx_health_metrics_name ON system_health_metrics(metric_name, timestamp);

@@ -10,7 +10,7 @@ echo ""
 
 # Step 1: Copy latest files to Spark container
 echo "📦 Copying batch processor files to Spark container..."
-cd /Users/s7s/Desktop/Uni/Fall\ 25/Big\ Data/Project/globalmart
+cd /home/g7/Desktop/BigData/globalmart
 docker cp batch-processor/ globalmart-spark-master:/app/
 echo "✓ Files copied"
 echo ""

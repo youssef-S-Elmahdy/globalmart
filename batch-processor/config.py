@@ -4,7 +4,7 @@ Configuration for GlobalMart Batch Processing
 
 # Spark Configuration
 SPARK_APP_NAME = "GlobalMart Batch Processor"
-SPARK_MASTER = "spark://globalmart-spark-master:7077"
+SPARK_MASTER = "spark://spark-master:7077"
 
 # PostgreSQL Configuration (Source for real-time data)
 POSTGRES_HOST = "globalmart-postgres"

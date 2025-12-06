@@ -14,7 +14,7 @@ def create_spark_session():
     spark = SparkSession.builder \
         .appName("GlobalMart Product Performance") \
         .config("spark.jars.packages",
-                "org.mongodb.spark:mongo-spark-connector_2.12:10.2.0") \
+                "org.mongodb.spark:mongo-spark-connector_2.12:10.4.0") \
         .config("spark.mongodb.read.connection.uri", config.MONGODB_URI) \
         .config("spark.mongodb.write.connection.uri", config.MONGODB_URI) \
         .getOrCreate()

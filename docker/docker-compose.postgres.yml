@@ -3,7 +3,7 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
-    platform: linux/arm64
+    platform: linux/amd64
     container_name: globalmart-postgres
     environment:
       POSTGRES_DB: globalmart

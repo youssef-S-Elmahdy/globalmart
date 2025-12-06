@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    platform: linux/amd64
+    container_name: globalmart-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - globalmart-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ../api
+      dockerfile: Dockerfile
+    container_name: globalmart-api
+    depends_on:
+      - redis
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_HOST=globalmart-postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=globalmart
+      - POSTGRES_USER=globalmart
+      - POSTGRES_PASSWORD=globalmart123
+      - MONGODB_HOST=globalmart-mongodb
+      - MONGODB_PORT=27017
+      - MONGODB_DB=globalmart_dw
+      - MONGODB_USER=globalmart
+      - MONGODB_PASSWORD=globalmart123
+      - REDIS_HOST=globalmart-redis
+      - REDIS_PORT=6379
+    volumes:
+      - ../api:/app
+    networks:
+      - globalmart-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  grafana:
+    image: grafana/grafana:latest
+    platform: linux/amd64
+    container_name: globalmart-grafana
+    depends_on:
+      - api
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_INSTALL_PLUGINS=grafana-clock-panel
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ../config/grafana/provisioning:/etc/grafana/provisioning
+      - ../config/grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - globalmart-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  redis-data:
+  grafana-data:
+
+networks:
+  globalmart-network:
+    external: true

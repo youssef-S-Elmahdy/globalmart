@@ -5,7 +5,7 @@
 [![Spark](https://img.shields.io/badge/Spark-3.5-red)](https://spark.apache.org/)
 [![Python](https://img.shields.io/badge/Python-3.11-green)](https://www.python.org/)
 
-A complete real-time analytics platform for e-commerce data processing, built with Apache Kafka, Apache Spark, FastAPI, and Grafana. Optimized for **MacBook M1** with Docker.
+A complete real-time analytics platform for e-commerce data processing, built with Apache Kafka, Apache Spark, FastAPI, and Grafana.
 
 ---
 
@@ -154,7 +154,7 @@ A complete real-time analytics platform for e-commerce data processing, built wi
 
 ### System Requirements
 
-- **MacBook M1** (ARM64 architecture)
+- **Linux** (AMD64 architecture)
 - **Memory**: 8GB RAM minimum (16GB recommended)
 - **Disk Space**: 20GB free space
 - **Docker Desktop**: Running with at least 6GB memory allocated
