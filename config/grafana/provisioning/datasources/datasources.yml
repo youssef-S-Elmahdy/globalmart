@@ -2,15 +2,15 @@ apiVersion: 1
 
 datasources:
   - name: PostgreSQL
+    uid: globalmart-postgres
     type: postgres
     access: proxy
     url: globalmart-postgres:5432
     database: globalmart
     user: globalmart
-    isDefault: true
     secureJsonData:
       password: globalmart123
     jsonData:
       sslmode: disable
-      postgresVersion: 1600
+    isDefault: true
     editable: true

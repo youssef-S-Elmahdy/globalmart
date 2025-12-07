@@ -92,10 +92,10 @@ class GlobalMartProducer:
         logger.info("Starting event generation with threading...")
         logger.info(f"Target throughput: {self.config.TARGET_THROUGHPUT} events/second")
 
-        # Generate initial data
+        # Generate initial data at configured scale
         logger.info("Generating user pool and product catalog...")
-        self.generator.generate_user_pool(10000)  # Generate 10k users
-        self.generator.generate_product_catalog(10000)  # Generate 10k products
+        self.generator.generate_user_pool(self.config.NUM_USERS)
+        self.generator.generate_product_catalog(self.config.NUM_PRODUCTS)
         logger.info("Initial data generation complete")
 
         self.start_time = time.time()
@@ -103,7 +103,7 @@ class GlobalMartProducer:
 
         try:
             # Use thread pool for parallel event generation
-            with ThreadPoolExecutor(max_workers=5) as executor:
+            with ThreadPoolExecutor(max_workers=10) as executor:
                 while True:
                     iteration += 1
                     cycle_start = time.time()

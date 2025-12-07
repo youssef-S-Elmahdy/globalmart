@@ -29,7 +29,7 @@ POSTGRES_PROPERTIES = {
     "driver": "org.postgresql.Driver"
 }
 # Tune thresholds low enough to trigger alerts quickly in short runs
-LOW_STOCK_THRESHOLD = 50
+LOW_STOCK_THRESHOLD = 65
 INITIAL_STOCK_LEVEL = 80  # Lower start so alerts fire sooner
 
 def create_spark_session():

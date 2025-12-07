@@ -22,11 +22,17 @@ except ImportError:
     import psutil
 
 try:
-    from kafka import KafkaAdminClient
-    from kafka.admin import NewTopic
+    from kafka import KafkaConsumer, TopicPartition
 except ImportError:
-    print("kafka-python-ng not found, skipping Kafka metrics")
-    KafkaAdminClient = None
+    print("kafka-python not found, skipping Kafka metrics")
+    KafkaConsumer = None
+    TopicPartition = None
+
+# Collection interval (seconds) - shorter interval tracks rate more closely
+COLLECTION_INTERVAL = int(os.getenv("METRICS_INTERVAL", "5"))
+
+# Track previous offsets to compute deltas/rates
+prev_offsets = {}
 
 # PostgreSQL connection
 def get_db_connection():
@@ -39,38 +45,49 @@ def get_db_connection():
     )
 
 def collect_kafka_metrics():
-    """Collect Kafka topic metrics"""
-    if KafkaAdminClient is None:
+    """Collect Kafka topic metrics using end offsets to compute deltas."""
+    if KafkaConsumer is None or TopicPartition is None:
         return []
 
-    try:
-        admin = KafkaAdminClient(bootstrap_servers='localhost:9093')
+    topics = ['transactions', 'product_views', 'cart_events']
+    metrics = []
 
-        topics = ['transactions', 'product_views', 'cart_events']
-        metrics = []
+    try:
+        consumer = KafkaConsumer(
+            bootstrap_servers='localhost:9093',
+            enable_auto_commit=False,
+            consumer_timeout_ms=2000
+        )
 
         for topic in topics:
             try:
-                # Get topic metadata
-                metadata = admin._client.cluster
-                topic_partitions = metadata.partitions_for_topic(topic)
+                partitions = consumer.partitions_for_topic(topic) or []
+                if not partitions:
+                    continue
 
-                if topic_partitions:
-                    # For now, store a simple count indicator
-                    # In production, you'd query offsets properly
-                    metrics.append({
-                        'topic': topic,
-                        'count': len(topic_partitions) * 1000,  # Placeholder
-                        'rate': 0  # Will be calculated from historical data
-                    })
+                tps = [TopicPartition(topic, p) for p in partitions]
+                end_offsets = consumer.end_offsets(tps)
+                total = sum(end_offsets.values())
+
+                prev_total = prev_offsets.get(topic, total)
+                delta = max(total - prev_total, 0)
+                rate = delta / COLLECTION_INTERVAL if COLLECTION_INTERVAL > 0 else 0
+
+                prev_offsets[topic] = total
+
+                metrics.append({
+                    'topic': topic,
+                    'count': delta,
+                    'rate': rate
+                })
             except Exception as e:
                 print(f"Error collecting metrics for topic {topic}: {e}")
 
-        admin.close()
-        return metrics
+        consumer.close()
     except Exception as e:
         print(f"Error connecting to Kafka: {e}")
-        return []
+
+    return metrics
 
 def collect_docker_metrics():
     """Collect Docker container status using sudo"""
@@ -159,7 +176,7 @@ def write_metrics():
         # Log summary
         timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
         print(f"[{timestamp}] Metrics collected:")
-        print(f"  - Kafka topics: {len(kafka_data)}")
+        print(f"  - Kafka topics: {len(kafka_data)} (event deltas per {COLLECTION_INTERVAL}s)")
         print(f"  - System: CPU={system['cpu_percent']:.1f}%, MEM={system['memory_percent']:.1f}%, DISK={system['disk_percent']:.1f}%")
         print(f"  - Containers: {len(containers)}")
 

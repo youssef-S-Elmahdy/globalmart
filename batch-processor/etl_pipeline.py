@@ -139,7 +139,7 @@ def load_to_mongodb(df, collection_name):
 
     df.write \
         .format("mongodb") \
-        .mode("append") \
+        .mode("overwrite") \
         .option("database", config.MONGODB_DB) \
         .option("collection", collection_name) \
         .save()

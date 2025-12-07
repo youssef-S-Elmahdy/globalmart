@@ -10,6 +10,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from pymongo import MongoClient
 from datetime import datetime, timedelta
+from bson.decimal128 import Decimal128
 
 # Page configuration
 st.set_page_config(
@@ -43,6 +44,23 @@ def load_data():
     for df_name, df in data.items():
         if '_id' in df.columns:
             df.drop('_id', axis=1, inplace=True)
+
+        # Convert Decimal128 to float for numeric operations
+        if not df.empty:
+            for col in df.columns:
+                if len(df[col]) > 0:
+                    first_val = df[col].iloc[0]
+                    if isinstance(first_val, Decimal128):
+                        df[col] = df[col].apply(lambda x: float(x.to_decimal()) if isinstance(x, Decimal128) else x)
+
+        # Convert numeric-looking strings to floats/ints so plots render correctly
+        if not df.empty:
+            for col in df.columns:
+                if df[col].dtype == object:
+                    converted = pd.to_numeric(df[col], errors='ignore')
+                    # Only replace if conversion actually changed dtype
+                    if converted.dtype != object:
+                        df[col] = converted
 
     return data
 
@@ -87,54 +105,39 @@ st.sidebar.markdown(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 if page == "Executive Overview":
     st.title("📈 Executive Overview")
 
-    # KPIs
-    col1, col2, col3, col4 = st.columns(4)
+    # Filter data by country
+    df_customers = data['customer_segments'].copy()
+    if selected_country != 'All' and not df_customers.empty and 'country' in df_customers.columns:
+        df_customers = df_customers[df_customers['country'] == selected_country]
+
+    # KPIs - calculate from customer_segments monetary values
+    col1, col2, col3 = st.columns(3)
 
     with col1:
-        total_revenue = data['sales_trends']['revenue'].sum() if 'revenue' in data['sales_trends'].columns else 0
+        total_revenue = df_customers['monetary'].sum() if 'monetary' in df_customers.columns and not df_customers.empty else 0
         st.metric("Total Revenue", f"${total_revenue:,.2f}")
 
     with col2:
-        total_transactions = data['sales_trends']['transactions'].sum() if 'transactions' in data['sales_trends'].columns else 0
-        st.metric("Total Transactions", f"{total_transactions:,}")
+        total_transactions = df_customers['frequency'].sum() if 'frequency' in df_customers.columns and not df_customers.empty else 0
+        st.metric("Total Transactions", f"{int(total_transactions):,}")
 
     with col3:
         avg_order = total_revenue / total_transactions if total_transactions > 0 else 0
         st.metric("Avg Order Value", f"${avg_order:,.2f}")
 
-    with col4:
-        growth_rate = data['sales_trends']['revenue_growth_rate'].mean() * 100 if 'revenue_growth_rate' in data['sales_trends'].columns else 0
-        st.metric("Growth Rate", f"{growth_rate:.2f}%")
-
     st.markdown("---")
 
-    # Revenue Trend
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.subheader("Revenue Trend")
-        if not data['sales_trends'].empty:
-            fig = px.line(
-                data['sales_trends'],
-                x='period',
-                y='revenue',
-                color='period_type',
-                title="Revenue Over Time"
-            )
-            fig.update_layout(height=400)
-            st.plotly_chart(fig, use_container_width=True)
-
-    with col2:
-        st.subheader("Customer Segment Distribution")
-        if not data['customer_segments'].empty and 'segment_name' in data['customer_segments'].columns:
-            segment_counts = data['customer_segments']['segment_name'].value_counts()
-            fig = px.pie(
-                values=segment_counts.values,
-                names=segment_counts.index,
-                title="Customer Segments"
-            )
-            fig.update_layout(height=400)
-            st.plotly_chart(fig, use_container_width=True)
+    # Customer Segment Distribution
+    st.subheader("Customer Segment Distribution")
+    if not df_customers.empty and 'segment_name' in df_customers.columns:
+        segment_counts = df_customers['segment_name'].value_counts()
+        fig = px.pie(
+            values=segment_counts.values,
+            names=segment_counts.index,
+            title="Customer Segments"
+        )
+        fig.update_layout(height=500)
+        st.plotly_chart(fig, use_container_width=True)
 
 # ============================================================================
 # PAGE 2: GEOGRAPHIC ANALYSIS
@@ -202,6 +205,10 @@ elif page == "Product Performance":
     if not data['fact_sales'].empty and 'category' in data['fact_sales'].columns:
         df_products = data['fact_sales'].copy()
 
+        # Apply country filter
+        if selected_country != 'All' and 'country' in df_products.columns:
+            df_products = df_products[df_products['country'] == selected_country]
+
         # Aggregate by category
         category_stats = df_products.groupby('category').agg({
             'total_amount': 'sum',
@@ -232,10 +239,12 @@ elif page == "Product Performance":
 
         with col1:
             st.subheader("Revenue Share by Category")
+            # Show only top 10 categories in pie chart
+            top_10_categories = category_stats.head(10)
             fig = px.pie(
-                values=category_stats['Revenue'],
-                names=category_stats.index,
-                title="Category Revenue Distribution"
+                values=top_10_categories['Revenue'],
+                names=top_10_categories.index,
+                title="Top 10 Categories Revenue Distribution"
             )
             fig.update_layout(height=400)
             st.plotly_chart(fig, use_container_width=True)
@@ -264,6 +273,10 @@ elif page == "Customer Insights":
     st.title("👥 Customer Segmentation & RFM Analysis")
 
     df_customers = data['customer_segments'].copy()
+
+    # Apply country filter
+    if selected_country != 'All' and not df_customers.empty and 'country' in df_customers.columns:
+        df_customers = df_customers[df_customers['country'] == selected_country]
 
     if not df_customers.empty:
         # KPIs
@@ -344,4 +357,4 @@ elif page == "Customer Insights":
 
 # Footer
 st.markdown("---")
-st.markdown("**GlobalMart Executive Dashboard** | Powered by Python, Streamlit & MongoDB | 🤖 Generated with Claude Code")
+st.markdown("**GlobalMart Executive Dashboard** | Powered by Python, Streamlit & MongoDB")

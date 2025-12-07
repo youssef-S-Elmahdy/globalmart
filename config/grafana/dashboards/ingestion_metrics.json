@@ -1,0 +1,240 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0,211,255,1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "uid": "globalmart-ingestion",
+  "id": null,
+  "title": "GlobalMart Ingestion Metrics",
+  "graphTooltip": 0,
+  "panels": [
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "globalmart-postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-BlPu"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(event_count) AS total_events FROM kafka_metrics WHERE timestamp > NOW() - INTERVAL '1 hour';",
+          "refId": "A",
+          "table": "kafka_metrics",
+          "timeColumn": "timestamp"
+        }
+      ],
+      "title": "Total Events Ingested (Last Hour)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "globalmart-postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        {
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(SUM(event_count), 0) / 60.0 AS rate FROM kafka_metrics WHERE timestamp > NOW() - INTERVAL '1 minute';",
+          "refId": "A",
+          "table": "kafka_metrics",
+          "timeColumn": "timestamp"
+        }
+      ],
+      "title": "Current Ingestion Rate (events/sec)",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "globalmart-postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "lines",
+            "fillOpacity": 10,
+            "lineWidth": 2
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, topic, event_count FROM kafka_metrics WHERE timestamp > NOW() - INTERVAL '1 hour' ORDER BY timestamp;",
+          "refId": "A",
+          "table": "kafka_metrics",
+          "timeColumn": "timestamp"
+        }
+      ],
+      "title": "Events by Topic (Last Hour)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "globalmart-postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 4,
+      "options": {
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT topic, SUM(event_count) AS total_events FROM kafka_metrics WHERE timestamp > NOW() - INTERVAL '6 hours' GROUP BY topic ORDER BY total_events DESC;",
+          "refId": "A",
+          "table": "kafka_metrics",
+          "timeColumn": "timestamp"
+        }
+      ],
+      "title": "Kafka Topics Summary (6h)",
+      "type": "table"
+    }
+  ],
+  "schemaVersion": 36,
+  "style": "dark",
+  "tags": [
+    "globalmart",
+    "ingestion"
+  ],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  
+  "version": 1
+}

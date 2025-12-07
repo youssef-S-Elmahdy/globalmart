@@ -51,6 +51,7 @@ services:
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
   grafana:
+    restart: unless-stopped
     image: grafana/grafana:latest
     platform: linux/amd64
     container_name: globalmart-grafana

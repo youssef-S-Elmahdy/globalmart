@@ -71,6 +71,8 @@ class DataGenerator:
 
         transaction_products = []
         total_amount = 0
+        # Use the first product's category as a representative for the transaction
+        transaction_category = products[0]['category'] if products else "General"
 
         for product in products:
             quantity = random.randint(1, 3)
@@ -80,7 +82,8 @@ class DataGenerator:
             transaction_products.append({
                 'product_id': product['product_id'],
                 'quantity': quantity,
-                'price': product['price']
+                'price': product['price'],
+                'category': product['category']
             })
 
         event = {
@@ -90,7 +93,9 @@ class DataGenerator:
             'products': transaction_products,
             'total_amount': round(total_amount, 2),
             'payment_method': random.choice(self.config.PAYMENT_METHODS),
-            'country': user['country']
+            'country': user['country'],
+            # Promote a single category for easier downstream aggregation
+            'category': transaction_category
         }
 
         return event

@@ -13,8 +13,8 @@ def create_spark_session():
     spark = SparkSession.builder \
         .appName("GlobalMart RFM Analysis") \
         .config("spark.jars.packages",
+                "org.postgresql:postgresql:42.6.0,"
                 "org.mongodb.spark:mongo-spark-connector_2.12:10.4.0") \
-        .config("spark.mongodb.read.connection.uri", config.MONGODB_URI) \
         .config("spark.mongodb.write.connection.uri", config.MONGODB_URI) \
         .getOrCreate()
 
@@ -25,46 +25,39 @@ def calculate_rfm_scores(spark):
     """Calculate RFM scores for each customer"""
     print("Calculating RFM scores...")
 
-    # Read fact_sales from MongoDB
-    fact_sales = spark.read \
-        .format("mongodb") \
-        .option("database", config.MONGODB_DB) \
-        .option("collection", config.DW_COLLECTIONS['fact_sales']) \
-        .load()
+    # Read transactions from PostgreSQL (contains user_id + monetary data)
+    transactions = spark.read \
+        .jdbc(
+            url=config.POSTGRES_URL,
+            table="transactions",
+            properties=config.POSTGRES_PROPERTIES
+        )
 
-    if fact_sales.count() == 0:
-        print("WARNING: No sales data found! Run ETL pipeline first.")
+    if transactions.count() == 0:
+        print("WARNING: No transaction data found! Make sure transaction_monitor is running.")
         return None
+
+    print(f"Found {transactions.count()} transactions")
 
     # Calculate reference date (today)
     reference_date = datetime.now()
 
-    # Calculate RFM metrics per customer
-    # Note: We need to aggregate by a customer identifier
-    # Since we don't have customer IDs in sales_metrics, we'll use country as a proxy
-    # In a real scenario, you'd join with transaction data that has user_ids
-
-    rfm = fact_sales.groupBy("country").agg(
-        # Recency: days since last purchase (we'll use window_start as proxy)
-        datediff(lit(reference_date), max("date_time")).alias("recency"),
-        # Frequency: number of transactions
-        sum("transaction_count").alias("frequency"),
-        # Monetary: total amount spent
+    # Calculate RFM metrics per customer (user_id)
+    rfm = transactions.groupBy("user_id", "country").agg(
+        datediff(lit(reference_date), max("timestamp")).alias("recency"),
+        count("*").alias("frequency"),
         sum("total_amount").alias("monetary")
     )
 
     # Calculate RFM scores using quantiles (1-5, where 5 is best)
     # Lower recency is better (more recent), so we reverse it
-    rfm_scored = rfm.withColumn(
-        "r_score",
-        ntile(config.RFM_QUANTILES).over(Window.orderBy(col("recency").desc()))
-    ).withColumn(
-        "f_score",
-        ntile(config.RFM_QUANTILES).over(Window.orderBy(col("frequency")))
-    ).withColumn(
-        "m_score",
-        ntile(config.RFM_QUANTILES).over(Window.orderBy(col("monetary")))
-    )
+    r_score_raw = ntile(config.RFM_QUANTILES).over(Window.orderBy(col("recency").desc()))
+    f_score_raw = ntile(config.RFM_QUANTILES).over(Window.orderBy(col("frequency")))
+    m_score_raw = ntile(config.RFM_QUANTILES).over(Window.orderBy(col("monetary")))
+
+    rfm_scored = rfm.withColumn("r_score", r_score_raw) \
+        .withColumn("f_score", f_score_raw) \
+        .withColumn("m_score", m_score_raw)
 
     # Create RFM segment string (e.g., "555" for Champions)
     rfm_scored = rfm_scored.withColumn(
@@ -163,8 +156,8 @@ def run_rfm_analysis():
 
         # Show results
         print("\nRFM Scores Sample:")
-        rfm_scores.select("country", "recency", "frequency", "monetary",
-                          "r_score", "f_score", "m_score", "segment_name").show()
+        rfm_scores.select("user_id", "country", "recency", "frequency", "monetary",
+                          "r_score", "f_score", "m_score", "segment_name").show(10)
 
         print("\nSegment Summary:")
         segment_summary.show()

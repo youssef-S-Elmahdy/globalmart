@@ -13,22 +13,21 @@
     ]
   },
   "editable": true,
-  "gnetId": null,
-  "graphTooltip": 0,
+  "uid": "globalmart-overview",
   "id": null,
-  "links": [],
+  "title": "Real-time Metrics Dashboard",
+  "graphTooltip": 0,
   "panels": [
     {
       "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "PCC52D03280B7034C"
+        "type": "postgres",
+        "uid": "globalmart-postgres"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
-          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -58,38 +57,18 @@
           "fields": "",
           "values": false
         },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true,
-        "text": {}
+        "showThresholdMarkers": true
       },
-      "pluginVersion": "9.0.0",
       "targets": [
         {
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
+          "datasource": {
+            "type": "postgres",
+            "uid": "globalmart-postgres"
+          },
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(SUM(total_amount), 0) as total_revenue FROM sales_metrics WHERE window_start >= NOW() - INTERVAL '24 hours'",
+          "rawSql": "SELECT COALESCE(SUM(total_amount), 0) AS total_revenue FROM sales_metrics WHERE window_start >= NOW() - INTERVAL '24 hours'",
           "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "total_amount"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "sales_metrics",
-          "timeColumn": "window_start",
-          "where": [
-            {
-              "name": "$__timeFilter",
-              "params": [],
-              "type": "macro"
-            }
-          ]
+          "format": "table"
         }
       ],
       "title": "Total Revenue (24h)",
@@ -97,15 +76,14 @@
     },
     {
       "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "PCC52D03280B7034C"
+        "type": "postgres",
+        "uid": "globalmart-postgres"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
-          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -135,38 +113,18 @@
           "fields": "",
           "values": false
         },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true,
-        "text": {}
+        "showThresholdMarkers": true
       },
-      "pluginVersion": "9.0.0",
       "targets": [
         {
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
+          "datasource": {
+            "type": "postgres",
+            "uid": "globalmart-postgres"
+          },
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(SUM(transaction_count), 0) as total_transactions FROM sales_metrics WHERE window_start >= NOW() - INTERVAL '24 hours'",
+          "rawSql": "SELECT COALESCE(SUM(transaction_count), 0) AS total_transactions FROM sales_metrics WHERE window_start >= NOW() - INTERVAL '24 hours'",
           "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "transaction_count"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "sales_metrics",
-          "timeColumn": "window_start",
-          "where": [
-            {
-              "name": "$__timeFilter",
-              "params": [],
-              "type": "macro"
-            }
-          ]
+          "format": "table"
         }
       ],
       "title": "Total Transactions (24h)",
@@ -174,15 +132,14 @@
     },
     {
       "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "PCC52D03280B7034C"
+        "type": "postgres",
+        "uid": "globalmart-postgres"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
-          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -212,28 +169,18 @@
           "fields": "",
           "values": false
         },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true,
-        "text": {}
+        "showThresholdMarkers": true
       },
-      "pluginVersion": "9.0.0",
       "targets": [
         {
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
+          "datasource": {
+            "type": "postgres",
+            "uid": "globalmart-postgres"
+          },
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) as anomaly_count FROM transaction_anomalies WHERE detected_at >= NOW() - INTERVAL '24 hours'",
+          "rawSql": "SELECT COUNT(*) AS anomaly_count FROM transaction_anomalies WHERE detected_at >= NOW() - INTERVAL '24 hours'",
           "refId": "A",
-          "table": "transaction_anomalies",
-          "timeColumn": "detected_at",
-          "where": [
-            {
-              "name": "$__timeFilter",
-              "params": [],
-              "type": "macro"
-            }
-          ]
+          "format": "table"
         }
       ],
       "title": "Anomalies Detected (24h)",
@@ -241,15 +188,14 @@
     },
     {
       "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "PCC52D03280B7034C"
+        "type": "postgres",
+        "uid": "globalmart-postgres"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
-          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -279,28 +225,18 @@
           "fields": "",
           "values": false
         },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true,
-        "text": {}
+        "showThresholdMarkers": true
       },
-      "pluginVersion": "9.0.0",
       "targets": [
         {
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
+          "datasource": {
+            "type": "postgres",
+            "uid": "globalmart-postgres"
+          },
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) as low_stock_count FROM low_stock_alerts WHERE alert_time >= NOW() - INTERVAL '24 hours'",
+          "rawSql": "SELECT COUNT(*) AS low_stock_count FROM low_stock_alerts WHERE alert_time >= NOW() - INTERVAL '24 hours'",
           "refId": "A",
-          "table": "low_stock_alerts",
-          "timeColumn": "alert_time",
-          "where": [
-            {
-              "name": "$__timeFilter",
-              "params": [],
-              "type": "macro"
-            }
-          ]
+          "format": "table"
         }
       ],
       "title": "Low Stock Alerts (24h)",
@@ -308,8 +244,8 @@
     },
     {
       "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "PCC52D03280B7034C"
+        "type": "postgres",
+        "uid": "globalmart-postgres"
       },
       "fieldConfig": {
         "defaults": {
@@ -317,42 +253,10 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
             "drawStyle": "line",
             "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "lineInterpolation": "linear",
             "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
+            "showPoints": "never"
           },
           "unit": "currencyUSD"
         },
@@ -367,7 +271,6 @@
       "id": 5,
       "options": {
         "legend": {
-          "calcs": [],
           "displayMode": "list",
           "placement": "bottom"
         },
@@ -375,34 +278,16 @@
           "mode": "single"
         }
       },
-      "pluginVersion": "9.0.0",
       "targets": [
         {
-          "format": "time_series",
-          "group": [],
-          "metricColumn": "none",
+          "datasource": {
+            "type": "postgres",
+            "uid": "globalmart-postgres"
+          },
           "rawQuery": true,
-          "rawSql": "SELECT window_start as time, SUM(total_amount) as revenue FROM sales_metrics WHERE $__timeFilter(window_start) GROUP BY window_start ORDER BY window_start",
+          "rawSql": "SELECT window_start AS time, SUM(total_amount) AS revenue FROM sales_metrics WHERE $__timeFilter(window_start) GROUP BY window_start ORDER BY window_start",
           "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "total_amount"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "sales_metrics",
-          "timeColumn": "window_start",
-          "where": [
-            {
-              "name": "$__timeFilter",
-              "params": [],
-              "type": "macro"
-            }
-          ]
+          "format": "table"
         }
       ],
       "title": "Revenue Over Time",
@@ -410,8 +295,8 @@
     },
     {
       "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "PCC52D03280B7034C"
+        "type": "postgres",
+        "uid": "globalmart-postgres"
       },
       "fieldConfig": {
         "defaults": {
@@ -419,42 +304,10 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
             "drawStyle": "line",
             "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "lineInterpolation": "linear",
             "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
+            "showPoints": "never"
           },
           "unit": "short"
         },
@@ -469,7 +322,6 @@
       "id": 6,
       "options": {
         "legend": {
-          "calcs": [],
           "displayMode": "list",
           "placement": "bottom"
         },
@@ -477,57 +329,144 @@
           "mode": "single"
         }
       },
-      "pluginVersion": "9.0.0",
       "targets": [
         {
-          "format": "time_series",
-          "group": [],
-          "metricColumn": "none",
+          "datasource": {
+            "type": "postgres",
+            "uid": "globalmart-postgres"
+          },
           "rawQuery": true,
-          "rawSql": "SELECT window_start as time, SUM(transaction_count) as transactions FROM sales_metrics WHERE $__timeFilter(window_start) GROUP BY window_start ORDER BY window_start",
+          "rawSql": "SELECT window_start AS time, SUM(transaction_count) AS transactions FROM sales_metrics WHERE $__timeFilter(window_start) GROUP BY window_start ORDER BY window_start",
           "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "transaction_count"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "sales_metrics",
-          "timeColumn": "window_start",
-          "where": [
-            {
-              "name": "$__timeFilter",
-              "params": [],
-              "type": "macro"
-            }
-          ]
+          "format": "table"
         }
       ],
       "title": "Transactions Over Time",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "globalmart-postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 18
+      },
+      "id": 7,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "globalmart-postgres"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS abandonment_count FROM cart_abandonment WHERE abandonment_time >= NOW() - INTERVAL '24 hours'",
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "title": "Cart Abandonment (24h)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "globalmart-postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 18
+      },
+      "id": 8,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "globalmart-postgres"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS sessions_last_hour FROM session_metrics WHERE end_time >= NOW() - INTERVAL '1 hour'",
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "title": "Active Sessions (Last Hour)",
+      "type": "stat"
     }
   ],
   "refresh": "5s",
-  "schemaVersion": 27,
+  "schemaVersion": 36,
   "style": "dark",
   "tags": [
     "globalmart",
-    "overview"
+    "real-time"
   ],
-  "templating": {
-    "list": []
-  },
   "time": {
     "from": "now-24h",
     "to": "now"
   },
-  "timepicker": {},
-  "timezone": "",
-  "title": "GlobalMart Analytics Overview",
-  "uid": "globalmart-overview",
-  "version": 0
+  "version": 1
 }

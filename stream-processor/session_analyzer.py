@@ -106,21 +106,6 @@ def analyze_sessions(spark):
             col("cart_removes")
         )
 
-    # Detect potential cart abandonment
-    abandonment = session_metrics \
-        .filter(
-            (col("cart_adds") > 0) &
-            (col("duration_seconds") > CART_ABANDONMENT_THRESHOLD_MINUTES * 60)
-        ) \
-        .select(
-            col("session_id"),
-            col("user_id"),
-            col("cart_adds").alias("products_in_cart"),
-            lit(0).alias("cart_value"),  # Would need product prices
-            col("end_time").alias("abandonment_time"),
-            (col("duration_seconds") / 60).alias("time_in_cart_minutes")
-        )
-
     # Write session metrics with upsert to handle duplicates
     def write_sessions(batch_df, batch_id):
         if batch_df.count() == 0:
@@ -163,6 +148,21 @@ def analyze_sessions(spark):
                 cart_removes = EXCLUDED.cart_removes
         """)
 
+        # Write cart abandonment records for sessions that qualify
+        cur.execute(f"""
+            INSERT INTO cart_abandonment (session_id, user_id, products_in_cart, cart_value, abandonment_time, time_in_cart_minutes)
+            SELECT
+                session_id,
+                user_id,
+                cart_adds,
+                0,
+                end_time,
+                duration_seconds / 60
+            FROM {temp_table}
+            WHERE cart_adds > 0 AND duration_seconds > {CART_ABANDONMENT_THRESHOLD_MINUTES * 60}
+            ON CONFLICT DO NOTHING
+        """)
+
         cur.execute(f"DROP TABLE {temp_table}")
         conn.commit()
         cur.close()
@@ -172,22 +172,6 @@ def analyze_sessions(spark):
         .writeStream \
         .foreachBatch(write_sessions) \
         .outputMode("update") \
-        .start()
-
-    # Write abandonment events
-    def write_abandonment(batch_df, batch_id):
-        batch_df.write \
-            .jdbc(
-                url=POSTGRES_URL,
-                table="cart_abandonment",
-                mode="append",
-                properties=POSTGRES_PROPERTIES
-            )
-
-    abandonment_query = abandonment \
-        .writeStream \
-        .foreachBatch(write_abandonment) \
-        .outputMode("append") \
         .start()
 
     # Console output

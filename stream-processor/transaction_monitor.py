@@ -118,7 +118,8 @@ def process_transactions():
         ]))),
         StructField("total_amount", DoubleType()),
         StructField("payment_method", StringType()),
-        StructField("country", StringType())
+        StructField("country", StringType()),
+        StructField("category", StringType())
     ])
 
     # Read from Kafka
@@ -134,7 +135,8 @@ def process_transactions():
     transactions_df = transactions \
         .select(from_json(col("value").cast("string"), transaction_schema).alias("data")) \
         .select("data.*") \
-        .withColumn("timestamp", to_timestamp(col("timestamp")))
+        .withColumn("timestamp", to_timestamp(col("timestamp"))) \
+        .withColumn("category", coalesce(col("category"), lit("General")))
 
     # Detect anomalies
     anomalies = detect_anomalies(transactions_df)
@@ -151,7 +153,8 @@ def process_transactions():
         .withWatermark("timestamp", "1 minute") \
         .groupBy(
             window(col("timestamp"), WINDOW_DURATION, SLIDING_DURATION),
-            col("country")
+            col("country"),
+            col("category")
         ) \
         .agg(
             count("*").alias("transaction_count"),
@@ -161,8 +164,7 @@ def process_transactions():
         .select(
             col("window.start").alias("window_start"),
             col("window.end").alias("window_end"),
-            # Cast category to string to avoid JDBC "void" type issues
-            lit("").cast(StringType()).alias("category"),
+            col("category"),
             col("country"),
             col("total_amount"),
             col("transaction_count"),
@@ -182,6 +184,35 @@ def process_transactions():
     metrics_query = metrics \
         .writeStream \
         .foreachBatch(write_metrics) \
+        .outputMode("append") \
+        .start()
+
+    # Write individual transactions to PostgreSQL for RFM analysis
+    # Cast total_amount to decimal to match PostgreSQL DECIMAL(12,2) type
+    transactions_for_storage = transactions_df.select(
+        col("transaction_id"),
+        col("user_id"),
+        col("timestamp"),
+        col("total_amount").cast("decimal(12,2)").alias("total_amount"),
+        col("category"),
+        col("country"),
+        col("payment_method")
+    )
+
+    def write_transactions(batch_df, batch_id):
+        """Write individual transactions to PostgreSQL"""
+        if batch_df.count() > 0:
+            batch_df.write \
+                .jdbc(
+                    url=POSTGRES_URL,
+                    table="transactions",
+                    mode="append",
+                    properties=POSTGRES_PROPERTIES
+                )
+
+    transactions_query = transactions_for_storage \
+        .writeStream \
+        .foreachBatch(write_transactions) \
         .outputMode("append") \
         .start()
 
